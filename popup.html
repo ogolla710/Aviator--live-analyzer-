@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Aviator Analyzer</title>
+  <style>
+    body {
+      width: 320px;
+      padding: 15px;
+      font-family: Arial;
+      background: #111827;
+      color: white;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    .box {
+      background: #1f2937;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+    }
+
+    .number {
+      font-size: 22px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>✈️ Aviator Analyzer</h2>
+
+<div class="box">
+  Latest Result:
+  <div id="latest" class="number">Waiting...</div>
+</div>
+
+<div class="box">
+  Rounds Detected:
+  <div id="rounds" class="number">0</div>
+</div>
+
+<div class="box">
+  ≥ 2x:
+  <div id="two" class="number">0%</div>
+</div>
+
+<div class="box">
+  ≥ 3x:
+  <div id="three" class="number">0%</div>
+</div>
+
+<script>
+function update() {
+
+  chrome.storage.local.get(["multipliers"], function(data) {
+
+    const values = data.multipliers || [];
+
+    document.getElementById("rounds").textContent =
+      values.length;
+
+    if (values.length > 0) {
+
+      const latest = values[values.length - 1];
+
+      document.getElementById("latest").textContent =
+        latest.toFixed(2) + "x";
+
+      const two =
+        values.filter(x => x >= 2).length /
+        values.length * 100;
+
+      const three =
+        values.filter(x => x >= 3).length /
+        values.length * 100;
+
+      document.getElementById("two").textContent =
+        two.toFixed(1) + "%";
+
+      document.getElementById("three").textContent =
+        three.toFixed(1) + "%";
+    }
+
+  });
+
+}
+
+update();
+setInterval(update, 1000);
+</script>
+
+</body>
+</html>
