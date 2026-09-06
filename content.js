@@ -1,54 +1,55 @@
+
 (function () {
-    let lastResults = [];
+    console.log("Aviator Analyzer: reader started");
 
-    function findMultipliers() {
-        const text = document.body.innerText;
+    let history = [];
 
-        const matches = text.match(/\b\d+(?:\.\d+)?x\b/gi) || [];
+    function scanPage() {
+        const text = document.body.innerText || "";
+
+        // Find numbers such as 1.25x, 2.04x, 12.67x
+        const matches = text.match(/\b\d+(?:\.\d+)?\s*x\b/gi) || [];
 
         const values = matches
-            .map(x => parseFloat(x.replace(/x/i, "")))
-            .filter(x => x >= 1 && x <= 100000);
+            .map(v => parseFloat(v.replace(/x/i, "").trim()))
+            .filter(v => v >= 1.00 && v <= 100000);
 
-        return [...new Set(values)];
+        return values;
     }
 
-    function updateResults() {
-        const values = findMultipliers();
+    function update() {
+        const values = scanPage();
 
-        if (values.length === 0) return;
+        if (!values.length) return;
 
-        const newValues = values.filter(
-            x => !lastResults.includes(x)
-        );
+        const newest = values[0];
 
-        if (newValues.length > 0) {
+        // Only add a value if it is different from the previous one
+        if (history.length === 0 || newest !== history[history.length - 1]) {
 
-            chrome.storage.local.get(
-                ["multipliers"],
-                function (data) {
+            history.push(newest);
 
-                    let history =
-                        data.multipliers || [];
+            // Keep last 200 rounds
+            if (history.length > 200) {
+                history.shift();
+            }
 
-                    history =
-                        history.concat(newValues);
+            chrome.storage.local.set({
+                multipliers: history
+            });
 
-                    history =
-                        history.slice(-200);
-
-                    chrome.storage.local.set({
-                        multipliers: history
-                    });
-                }
+            console.log(
+                "Aviator Analyzer detected:",
+                newest + "x"
             );
-
-            lastResults = values;
         }
     }
 
-    setInterval(updateResults, 1500);
+    // Check the page every second
+    setInterval(update, 1000);
 
-    updateResults();
-
+    update();
 })();
+    
+
+        
